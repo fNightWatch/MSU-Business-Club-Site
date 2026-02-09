@@ -657,9 +657,14 @@ p {
 }
 
 .contacts {
+  margin-top: 60px;
   --contacts-col-width: 390px;
   display: flex;
   justify-content: center;
+}
+
+.event-text {
+  text-align: center;
 }
 
 .contacts-split {

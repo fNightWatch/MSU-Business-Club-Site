@@ -215,6 +215,8 @@ def parse_ru_datetime_from_text(text: str, base: Optional[datetime]) -> Optional
         tm = re.search(r"(\d{1,2}):(\d{2})", low[m.end(): m.end() + 50])
         if tm:
             hh, mm = int(tm.group(1)), int(tm.group(2))
+        if not mo:
+            mo = 1
         candidate = datetime(y, mo, d, hh, mm, tzinfo=MOSCOW_TZ)
         # если дата “сильно в прошлом” относительно base — возможно, это следующий год
         if candidate < (base - timedelta(days=7)):
