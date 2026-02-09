@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" role="img" aria-label="Интенсивы">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#06091b"/>
+      <stop offset="60%" stop-color="#0a1131"/>
+      <stop offset="100%" stop-color="#06091b"/>
+    </linearGradient>
+    <linearGradient id="line" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#4de3ff" stop-opacity="0.1"/>
+      <stop offset="30%" stop-color="#4de3ff" stop-opacity="0.85"/>
+      <stop offset="70%" stop-color="#7a5cff" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#7a5cff" stop-opacity="0.1"/>
+    </linearGradient>
+    <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="12" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.9 0" result="glow"/>
+      <feMerge>
+        <feMergeNode in="glow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="900" rx="48" fill="url(#bg)"/>
+  <g opacity="0.9">
+    <circle cx="980" cy="240" r="180" fill="#4de3ff" opacity="0.09"/>
+    <circle cx="220" cy="660" r="220" fill="#7a5cff" opacity="0.08"/>
+  </g>
+
+  <g filter="url(#softGlow)">
+    <rect x="72" y="96" width="1056" height="708" rx="38" fill="transparent" stroke="url(#line)" stroke-width="6"/>
+    <path d="M120 650 C 260 520, 360 760, 520 610 S 820 520, 980 600" fill="none" stroke="#4de3ff" stroke-width="5" opacity="0.55"/>
+    <path d="M160 240 C 340 140, 520 300, 700 210 S 980 160, 1060 260" fill="none" stroke="#7a5cff" stroke-width="4" opacity="0.35"/>
+  </g>
+
+  <text x="600" y="420" text-anchor="middle" font-family="system-ui, -apple-system, Segoe UI, Roboto, Arial" font-size="54" fill="#e8fbff" font-weight="750">Интенсивы</text>
+  <text x="600" y="470" text-anchor="middle" font-family="system-ui, -apple-system, Segoe UI, Roboto, Arial" font-size="18" fill="#b7f4ff" opacity="0.9">ЗАГЛУШКА ИЗОБРАЖЕНИЯ • 4:3 • 1200×900</text>
+</svg>
