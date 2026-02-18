@@ -19,26 +19,10 @@
 
 Также прямые URL `/index.html`, `/events.html`, `/forums.html` продолжают работать.
 
-## Быстрый запуск (пошагово)
-
-### 1) Проверить версии Node.js и npm
-
-```bash
-node -v
-npm -v
-```
-
-Рекомендуется **Node.js 18+** (лучше 20 LTS).
-
-### 2) Установить зависимости
+## Запуск
 
 ```bash
 npm install
-```
-
-### 3) Запустить dev-сервер
-
-```bash
 npm run dev
 ```
 
@@ -48,37 +32,7 @@ npm run dev
 - `http://localhost:3000/events`
 - `http://localhost:3000/forums`
 
----
-
-## Если не запускается (`next: not found`)
-
-Если после `npm run dev` видно ошибку вида `sh: 1: next: not found`, значит пакет `next` не установился локально.
-
-Сделайте в корне проекта:
-
-```bash
-rm -rf node_modules package-lock.json
-npm install
-npm ls next
-npm run dev
-```
-
-Если всё ещё не запускается, выполните точечную установку:
-
-```bash
-npm install next react react-dom
-npm run dev
-```
-
-Если порт `3000` занят:
-
-```bash
-npm run dev -- -p 3001
-```
-
----
-
-## Сборка production
+## Сборка
 
 ```bash
 npm run build
