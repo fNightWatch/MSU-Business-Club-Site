@@ -1,71 +1,96 @@
-# Бизнес-клуб МГУ — мультистраничный сайт (v2)
+# Бизнес-клуб МГУ — бережная миграция на Next.js
 
-Это расширение исходного одностраничного лендинга до нескольких страниц:
+Проект переведён на **Next.js** без изменения текущего визуала и клиентской логики.
+Основные HTML/CSS/JS-файлы сохранены как есть и теперь отдаются как статические страницы через Next.
 
-- `index.html` — главная (точка входа): лендинг + блок **Команда** + блок **Партнёры**.
-- `events.html` — **Архив мероприятий** (подтягивается из `assets/data/events.json`).
-- `forums.html` — **Бизнес-форумы МГУ по годам** (данные из `assets/data/forum-stats.json`).
+## Что осталось неизменным
 
-## Структура проекта
+- Весь визуал и разметка в `public/index.html`, `public/events.html`, `public/forums.html`.
+- Общие стили и скрипты: `public/assets/css/styles.css`, `public/assets/js/*`.
+- Интеграция архива мероприятий из файла: `public/assets/data/events.json` (через `fetch("assets/data/events.json")`).
 
-- `assets/css/styles.css` — общий стиль для всех страниц (адаптив + доступность).
-- `assets/js/main.js` — общий JS (меню, формы, язык, фиксы, автопрокрутка команды).
-- `assets/js/events-page.js` — JS только для `events.html`.
-- `assets/js/forums-page.js` — JS только для `forums.html`.
-- `assets/data/events.json` — база мероприятий (JSON).
-- `assets/data/forum-stats.json` — данные по форумам (JSON).
-- `assets/img/*` — изображения (в этой версии есть **заглушки**; замените на реальные).
+## Маршруты
 
-## Как запускать локально (важно)
+Через `next.config.mjs` настроены rewrite-маршруты:
 
-Чтобы `fetch()` мог читать JSON-файлы, открывайте сайт через локальный сервер:
+- `/` → `public/index.html`
+- `/events` → `public/events.html`
+- `/forums` → `public/forums.html`
 
-```bash
-python -m http.server 8000
-```
+Также прямые URL `/index.html`, `/events.html`, `/forums.html` продолжают работать.
 
-После этого:
-- Главная: `http://localhost:8000/index.html`
-- Архив: `http://localhost:8000/events.html`
-- Форумы: `http://localhost:8000/forums.html`
+## Быстрый запуск (пошагово)
 
-## Обновление архива мероприятий из Telegram
-
-В репозитории лежит парсер: `tools/parser.py` (без дополнительных зависимостей сайта).
-Он скачивает публичные посты канала и собирает `events.json`.
-
-Перед запуском установите зависимости парсера:
+### 1) Проверить версии Node.js и npm
 
 ```bash
-pip install requests beautifulsoup4
+node -v
+npm -v
 ```
 
-Пример запуска:
+Рекомендуется **Node.js 18+** (лучше 20 LTS).
+
+### 2) Установить зависимости
 
 ```bash
-python tools/parser.py --channel bcmsu --max-posts 120 --out assets/data/events.json
+npm install
 ```
 
-> На хостинге сайт остаётся статическим — вы просто обновляете `assets/data/events.json` по мере надобности.
+### 3) Запустить dev-сервер
 
-## Обновление статистики форумов
+```bash
+npm run dev
+```
 
-Файл `assets/data/forum-stats.json` — простая таблица по годам.
+Откройте:
 
-Поля на строку:
-- `year`
-- `participants`
-- `applications`
-- `speakers`
-- `speaker_capital_bln_rub`
-- `partners`
-- `notes` (опционально)
+- `http://localhost:3000/`
+- `http://localhost:3000/events`
+- `http://localhost:3000/forums`
 
-Замените демонстрационные цифры на реальные — страница обновится автоматически.
+---
 
-## Примечание по Google Translate
+## Если не запускается (`next: not found`)
 
-Переключатель языка работает через Google Translate. В `styles.css` + `main.js` добавлен фикс,
-который пытается скрыть верхнюю панель/баннер перевода, чтобы он не перекрывал меню.
+Если после `npm run dev` видно ошибку вида `sh: 1: next: not found`, значит пакет `next` не установился локально.
 
-Если у вас всплывает панель не от сайта, а от расширения браузера — её скрыть невозможно.
+Сделайте в корне проекта:
+
+```bash
+rm -rf node_modules package-lock.json
+npm install
+npm ls next
+npm run dev
+```
+
+Если всё ещё не запускается, выполните точечную установку:
+
+```bash
+npm install next react react-dom
+npm run dev
+```
+
+Если порт `3000` занят:
+
+```bash
+npm run dev -- -p 3001
+```
+
+---
+
+## Сборка production
+
+```bash
+npm run build
+npm run start
+```
+
+## Обновление архива мероприятий
+
+Парсер сохранён без изменений: `tools/parser.py`.
+
+Пример обновления JSON:
+
+```bash
+python tools/parser.py --channel bcmsu --max-posts 120 --out public/assets/data/events.json
+```
