@@ -1,71 +1,50 @@
-# Бизнес-клуб МГУ — мультистраничный сайт (v2)
+# Бизнес-клуб МГУ — бережная миграция на Next.js
 
-Это расширение исходного одностраничного лендинга до нескольких страниц:
+Проект переведён на **Next.js** без изменения текущего визуала и клиентской логики.
+Основные HTML/CSS/JS-файлы сохранены как есть и теперь отдаются как статические страницы через Next.
 
-- `index.html` — главная (точка входа): лендинг + блок **Команда** + блок **Партнёры**.
-- `events.html` — **Архив мероприятий** (подтягивается из `assets/data/events.json`).
-- `forums.html` — **Бизнес-форумы МГУ по годам** (данные из `assets/data/forum-stats.json`).
+## Что осталось неизменным
 
-## Структура проекта
+- Весь визуал и разметка в `public/index.html`, `public/events.html`, `public/forums.html`.
+- Общие стили и скрипты: `public/assets/css/styles.css`, `public/assets/js/*`.
+- Интеграция архива мероприятий из файла: `public/assets/data/events.json` (через `fetch("assets/data/events.json")`).
 
-- `assets/css/styles.css` — общий стиль для всех страниц (адаптив + доступность).
-- `assets/js/main.js` — общий JS (меню, формы, язык, фиксы, автопрокрутка команды).
-- `assets/js/events-page.js` — JS только для `events.html`.
-- `assets/js/forums-page.js` — JS только для `forums.html`.
-- `assets/data/events.json` — база мероприятий (JSON).
-- `assets/data/forum-stats.json` — данные по форумам (JSON).
-- `assets/img/*` — изображения (в этой версии есть **заглушки**; замените на реальные).
+## Маршруты
 
-## Как запускать локально (важно)
+Через `next.config.mjs` настроены rewrite-маршруты:
 
-Чтобы `fetch()` мог читать JSON-файлы, открывайте сайт через локальный сервер:
+- `/` → `public/index.html`
+- `/events` → `public/events.html`
+- `/forums` → `public/forums.html`
 
-```bash
-python -m http.server 8000
-```
+Также прямые URL `/index.html`, `/events.html`, `/forums.html` продолжают работать.
 
-После этого:
-- Главная: `http://localhost:8000/index.html`
-- Архив: `http://localhost:8000/events.html`
-- Форумы: `http://localhost:8000/forums.html`
-
-## Обновление архива мероприятий из Telegram
-
-В репозитории лежит парсер: `tools/parser.py` (без дополнительных зависимостей сайта).
-Он скачивает публичные посты канала и собирает `events.json`.
-
-Перед запуском установите зависимости парсера:
+## Запуск
 
 ```bash
-pip install requests beautifulsoup4
+npm install
+npm run dev
 ```
 
-Пример запуска:
+Откройте:
+
+- `http://localhost:3000/`
+- `http://localhost:3000/events`
+- `http://localhost:3000/forums`
+
+## Сборка
 
 ```bash
-python tools/parser.py --channel bcmsu --max-posts 120 --out assets/data/events.json
+npm run build
+npm run start
 ```
 
-> На хостинге сайт остаётся статическим — вы просто обновляете `assets/data/events.json` по мере надобности.
+## Обновление архива мероприятий
 
-## Обновление статистики форумов
+Парсер сохранён без изменений: `tools/parser.py`.
 
-Файл `assets/data/forum-stats.json` — простая таблица по годам.
+Пример обновления JSON:
 
-Поля на строку:
-- `year`
-- `participants`
-- `applications`
-- `speakers`
-- `speaker_capital_bln_rub`
-- `partners`
-- `notes` (опционально)
-
-Замените демонстрационные цифры на реальные — страница обновится автоматически.
-
-## Примечание по Google Translate
-
-Переключатель языка работает через Google Translate. В `styles.css` + `main.js` добавлен фикс,
-который пытается скрыть верхнюю панель/баннер перевода, чтобы он не перекрывал меню.
-
-Если у вас всплывает панель не от сайта, а от расширения браузера — её скрыть невозможно.
+```bash
+python tools/parser.py --channel bcmsu --max-posts 120 --out public/assets/data/events.json
+```
