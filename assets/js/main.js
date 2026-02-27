@@ -147,40 +147,6 @@
     setActiveLinkByPath();
   }
 
-
-  /**
-   * =========================
-   * Stagger reveal для буллетов
-   * =========================
-   */
-  (function initStaggerReveal() {
-    const groups = document.querySelectorAll('[data-stagger]');
-    if (!groups.length) return;
-
-    groups.forEach(function (group) {
-      const items = group.querySelectorAll('li');
-      items.forEach(function (item, index) {
-        item.style.transitionDelay = String(index * 80) + 'ms';
-      });
-    });
-
-    const observer = new IntersectionObserver(
-      function (entries) {
-        entries.forEach(function (entry) {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('is-visible');
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.22 }
-    );
-
-    groups.forEach(function (group) {
-      observer.observe(group);
-    });
-  })();
-
   /**
    * =========================
    * Слайдер анонсов (главная)
