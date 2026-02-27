@@ -147,6 +147,166 @@
     setActiveLinkByPath();
   }
 
+
+  /**
+   * =========================
+   * Сквозные scroll-анимации (двусторонние)
+   * =========================
+   */
+  (function initScrollDrivenEffects() {
+    if (!isHomePage) return;
+
+    const revealNodes = Array.from(document.querySelectorAll('[data-scroll-reveal]'));
+    const hero = document.getElementById('hero');
+    const heroMedia = document.querySelector('[data-hero-media] img');
+    const heroFrost = document.querySelector('[data-hero-frost]');
+
+    const prefersReducedMotion =
+      window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    let rafId = 0;
+
+    function clamp01(value) {
+      return Math.min(1, Math.max(0, value));
+    }
+
+    function update() {
+      const viewportH = window.innerHeight || 1;
+
+      if (hero && heroMedia && heroFrost) {
+        const heroRange = Math.max(260, hero.offsetHeight * 0.95);
+        const heroProgress = clamp01(window.scrollY / heroRange);
+        const mediaOpacity = 1 - heroProgress * 0.64;
+        const frostOpacity = 0.98 - heroProgress * 0.52;
+        heroMedia.style.setProperty('--hero-media-opacity', String(mediaOpacity.toFixed(4)));
+        heroFrost.style.setProperty('--hero-frost-opacity', String(frostOpacity.toFixed(4)));
+      }
+
+      revealNodes.forEach(function (node) {
+        const rect = node.getBoundingClientRect();
+        const start = viewportH * 0.9;
+        const end = viewportH * 0.22;
+        const progress = clamp01((start - rect.top) / (start - end));
+        node.style.setProperty('--reveal-progress', progress.toFixed(4));
+      });
+
+      rafId = 0;
+    }
+
+    function queueUpdate() {
+      if (rafId) return;
+      rafId = window.requestAnimationFrame(update);
+    }
+
+    if (!prefersReducedMotion) {
+      window.addEventListener('scroll', queueUpdate, { passive: true });
+    }
+
+    window.addEventListener('resize', queueUpdate);
+    queueUpdate();
+  })();
+
+  /**
+   * =========================
+   * Галереи во вкладке «О клубе»
+   * =========================
+   */
+  (function initAboutMediaGallery() {
+    if (!isHomePage) return;
+
+    const galleries = Array.from(document.querySelectorAll('.about-media[data-gallery-images]'));
+    if (!galleries.length) return;
+
+    const prefersReducedMotion =
+      window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const ROTATE_EVERY_MS = 4000;
+
+    function setupGallery(gallery) {
+      const parsed = (gallery.getAttribute('data-gallery-images') || '')
+        .split(',')
+        .map(function (src) {
+          return src.trim();
+        })
+        .filter(Boolean);
+
+      const initial = gallery.querySelector('img');
+      const initialSrc = initial ? initial.getAttribute('src') : '';
+      const images = initialSrc ? [initialSrc].concat(parsed.filter(function (src) { return src !== initialSrc; })) : parsed;
+      if (images.length < 2 || !initial) return null;
+
+      const direction = (gallery.getAttribute('data-gallery-direction') || 'left').toLowerCase() === 'right' ? 'right' : 'left';
+      const delay = Number(gallery.getAttribute('data-gallery-delay')) || 0;
+
+      initial.classList.add('gallery-image', 'is-active');
+
+      const frames = [initial];
+      images.slice(1).forEach(function (src) {
+        const img = document.createElement('img');
+        img.src = src;
+        img.alt = '';
+        img.setAttribute('aria-hidden', 'true');
+        img.className = 'gallery-image';
+        gallery.appendChild(img);
+        frames.push(img);
+      });
+
+      return {
+        direction: direction,
+        delay: delay,
+        index: 0,
+        isAnimating: false,
+        frames: frames
+      };
+    }
+
+    const prepared = galleries.map(setupGallery).filter(Boolean);
+    if (!prepared.length || prefersReducedMotion) return;
+
+    function nextFrame(item) {
+      if (item.isAnimating) return;
+      const nextIndex = (item.index + 1) % item.frames.length;
+      const current = item.frames[item.index];
+      const next = item.frames[nextIndex];
+
+      const fromClass = item.direction === 'left' ? 'is-from-right' : 'is-from-left';
+      const toClass = item.direction === 'left' ? 'is-to-left' : 'is-to-right';
+
+      item.isAnimating = true;
+
+      next.classList.remove('is-from-left', 'is-from-right', 'is-to-left', 'is-to-right', 'is-leaving');
+      current.classList.remove('is-from-left', 'is-from-right', 'is-to-left', 'is-to-right', 'is-leaving');
+
+      next.classList.add('is-entering', fromClass);
+      current.classList.add('is-leaving', toClass);
+
+      window.requestAnimationFrame(function () {
+        next.classList.remove(fromClass);
+      });
+
+      window.setTimeout(function () {
+        current.classList.remove('is-active', 'is-leaving', toClass);
+        next.classList.remove('is-entering');
+        next.classList.add('is-active');
+        item.index = nextIndex;
+        item.isAnimating = false;
+      }, 210);
+    }
+
+    function rotateCycle() {
+      prepared.forEach(function (item) {
+        window.setTimeout(function () {
+          nextFrame(item);
+        }, item.delay);
+      });
+    }
+
+    window.setInterval(rotateCycle, ROTATE_EVERY_MS);
+    rotateCycle();
+  })();
+
   /**
    * =========================
    * Слайдер анонсов (главная)

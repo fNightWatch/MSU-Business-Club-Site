@@ -111,7 +111,7 @@
 
     <main id="main-content">
       <section class="hero section" id="hero">
-        <div class="hero-media" aria-hidden="true">
+        <div class="hero-media" aria-hidden="true" data-hero-media>
           <!-- Фон заставки: при необходимости замените на фото МГУ (JPG/WebP, 16:9, минимум 1920x1080) -->
           <img
             src="https://static.tildacdn.com/tild6333-6533-4665-b036-636561386534/0912_Kosmicheskij-fa.jpg"
@@ -119,7 +119,7 @@
             loading="eager"
           />
         </div>
-        <div class="hero-frost neon-panel" aria-hidden="true"></div>
+        <div class="hero-frost neon-panel" aria-hidden="true" data-hero-frost></div>
 
         <div class="hero-copy">
           <h1>Бизнес-клуб МГУ</h1>
@@ -140,46 +140,49 @@
           <p class="eyebrow">О клубе</p>
           <h2>Возможности для резидентов</h2>
         </div>
-        <p class="section-lead">
+        <p class="section-lead" data-scroll-reveal>
           Ты хотел бы обсудить стратегические деловые вопросы с компетентными людьми? Взглянуть на ситуацию со стороны и получить релевантный совет? А как насчёт расширения круга полезных знакомств и возможности развиваться в компании единомышленников?
         </p>
         <div class="about-zigzag">
-          <article class="about-row">
-            <div class="about-media neon-panel">
+          <article class="about-row" data-scroll-reveal>
+            <div class="about-media neon-panel" data-gallery-direction="left" data-gallery-delay="0" data-gallery-images="assets/img/network.jpg,assets/img/events.jpg,assets/img/invests.jpg">
               <img src="assets/img/network.jpg" alt="Нетворкинг, наставничество и поиск команды" />
             </div>
-            <div class="about-text neon-panel">
+            <div class="about-text neon-panel" data-scroll-reveal>
               <h3>Нетворкинг, наставничество и поиск команды</h3>
-              <p>
-                Обмен опытом с участниками клуба, невероятно заряженная команда БК МГУ. Поддержка от опытных менторов и эдвайзеров.
-                <br />Формулирование стратегии, осмысление полученного опыта и получение рекомендаций по развитию и росту бизнеса.
-                Поиск кофаундеров и участников с нужными навыками.
-              </p>
+              <ul class="about-bullets">
+                <li>Обмен опытом с предпринимателями, экспертами и резидентами клуба в живом формате.</li>
+                <li>Поддержка от менторов и эдвайзеров при формировании стратегии и развитии проекта.</li>
+                <li>Поиск кофаундеров и участников команды с нужными компетенциями для быстрого роста.</li>
+              </ul>
             </div>
           </article>
 
-          <article class="about-row about-row--reverse">
-            <div class="about-media neon-panel">
+          <article class="about-row about-row--reverse" data-scroll-reveal>
+            <div class="about-media neon-panel" data-gallery-direction="right" data-gallery-delay="140" data-gallery-images="assets/img/invests.jpg,assets/img/network.jpg,assets/img/events.jpg">
               <img src="assets/img/invests.jpg" alt="Инвестиции для стартапов" />
             </div>
-            <div class="about-text neon-panel">
+            <div class="about-text neon-panel" data-scroll-reveal>
               <h3>Инвестиции для стартапов</h3>
-              <p>
-                Наши инвесторы — крупные российские компании, инвестиционные и венчурные фонды, частные инвесторы, а также остальные участники рынка,
-                получившие одобрение от руководства клуба. Участие в питч-сессиях — прекрасный шанс заявить о своём проекте инвесторам и/или получить грант.
-              </p>
+              <ul class="about-bullets">
+                <li>Доступ к инвесторам: корпорации, венчурные и инвестиционные фонды, частные партнёры клуба.</li>
+                <li>Регулярные питч-сессии, где можно ярко представить проект и получить предметный фидбек.</li>
+                <li>Возможность привлечь финансирование или грантовую поддержку на ранней стадии развития.</li>
+              </ul>
             </div>
           </article>
 
-          <article class="about-row">
-            <div class="about-media neon-panel">
+          <article class="about-row" data-scroll-reveal>
+            <div class="about-media neon-panel" data-gallery-direction="left" data-gallery-delay="280" data-gallery-images="assets/img/events.jpg,assets/img/invests.jpg,assets/img/network.jpg">
               <img src="assets/img/events.jpg" alt="Клубные мероприятия" />
             </div>
-            <div class="about-text neon-panel">
+            <div class="about-text neon-panel" data-scroll-reveal>
               <h3>Клубные мероприятия</h3>
-              <p>
-                Закрытые мероприятия для резидентов клуба, в том числе с приглашенными топ-спикерами. Форматы: закрытая встреча, бизнес-завтрак, выездная рабочая сессия.
-              </p>
+              <ul class="about-bullets">
+                <li>Закрытые форматы для резидентов: клубные встречи, бизнес-завтраки и стратегические сессии.</li>
+                <li>Общение с топ-спикерами, предпринимателями и лидерами индустрии в камерной атмосфере.</li>
+                <li>Практический фокус: идеи, партнёрства и совместные инициативы, которые приводят к результатам.</li>
+              </ul>
             </div>
           </article>
         </div>
