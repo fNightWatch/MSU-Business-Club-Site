@@ -81,13 +81,14 @@
     );
 
     // порядок важен и используется для определения того, какой раздел активен
-    const menuSectionIds = ["about", "team", "events", "products", "contacts"];
+    const menuSectionIds = ["about", "numbers", "team", "events", "products", "faq", "contacts"];
 
     function setActiveMenuItem(sectionId) {
+      const mappedId = sectionId === "numbers" ? "about" : sectionId;
       navLinks.forEach(function (link) {
         link.classList.toggle(
           "is-active",
-          link.getAttribute("href") === "#" + sectionId
+          link.getAttribute("href") === "#" + mappedId
         );
       });
     }
@@ -463,6 +464,499 @@
       // ...когда-нибудь я сделаю логи
     }
   }
+
+
+  // ===== Scroll animations (reversible) =====
+  // Use: add data-animate="fade-up|fade-down|fade-left|fade-right|scale-in|blur-in"
+  // Optional: set data-stagger="90" on a container to stagger child [data-animate].
+
+  (function initScrollAnimations() {
+    // CSS is scoped to html.sa-ready so we don't break the no-JS fallback.
+    document.documentElement.classList.add("sa-ready");
+
+    const prefersReducedMotion =
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const DEFAULT_DELAY_STEP = 90;
+
+    let observer = null;
+
+    function ensureObserver() {
+      if (observer || prefersReducedMotion) return;
+
+      try {
+        observer = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              const el = entry.target;
+              if (entry.isIntersecting) {
+                el.classList.add("is-inview");
+              } else {
+                el.classList.remove("is-inview");
+              }
+            });
+          },
+          { threshold: 0.14, rootMargin: "0px 0px -10% 0px" }
+        );
+      } catch (e) {
+        observer = null;
+      }
+    }
+
+    function applyStagger(root) {
+      if (!root) return;
+
+      const staggerContainers = root.querySelectorAll
+        ? root.querySelectorAll("[data-stagger]")
+        : [];
+
+      staggerContainers.forEach(function (container) {
+        const step = Number(container.dataset.stagger) || DEFAULT_DELAY_STEP;
+        const animated = container.querySelectorAll("[data-animate]");
+        let i = 0;
+        animated.forEach(function (el) {
+          // allow overriding per element
+          if (!el.style.getPropertyValue("--sa-delay")) {
+            el.style.setProperty("--sa-delay", String(i * step) + "ms");
+          }
+          i += 1;
+        });
+      });
+    }
+
+    function bind(root) {
+      const scope = root && root.querySelectorAll ? root : document;
+
+      // once
+      applyStagger(scope);
+
+      const animatedEls = scope.querySelectorAll
+        ? scope.querySelectorAll("[data-animate]")
+        : [];
+
+      if (prefersReducedMotion) {
+        animatedEls.forEach(function (el) {
+          el.classList.add("is-inview");
+        });
+        return;
+      }
+
+      ensureObserver();
+
+      if (!observer) {
+        animatedEls.forEach(function (el) {
+          el.classList.add("is-inview");
+        });
+        return;
+      }
+
+      animatedEls.forEach(function (el) {
+        if (el.dataset.saBound === "1") return;
+        el.dataset.saBound = "1";
+        observer.observe(el);
+      });
+    }
+
+    // expose for blocks that render DOM later (например: Q&A)
+    window.BCScrollAnimations = {
+      refresh: function (root) {
+        bind(root || document);
+      }
+    };
+
+    // init
+    bind(document);
+  })();
+
+  // ===== Hero background fade on scroll (home only) =====
+  (function initHeroBgFade() {
+    if (!isHomePage) return;
+
+    const hero = document.getElementById("hero");
+    if (!hero) return;
+
+    const prefersReducedMotion =
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (prefersReducedMotion) return;
+
+    function clamp(n, a, b) {
+      return Math.max(a, Math.min(b, n));
+    }
+
+    let scheduled = false;
+
+    function update() {
+      scheduled = false;
+
+      const rect = hero.getBoundingClientRect();
+      const heroH = Math.max(1, rect.height || 1);
+
+      // how much hero is scrolled past the top
+      const scrolled = clamp(-rect.top, 0, heroH);
+      const t = scrolled / heroH;
+
+      // Fade image from 1.0 -> 0.28 as you scroll through the hero
+      const opacity = 1 - t * 0.72;
+      hero.style.setProperty("--hero-media-opacity", opacity.toFixed(3));
+    }
+
+    function onScroll() {
+      if (scheduled) return;
+      scheduled = true;
+      requestAnimationFrame(update);
+    }
+
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+  })();
+
+  
+  // ===== Magnetic hover (premium micro-interaction) =====
+  // Add data-magnet to any element. Works only on hover devices and when reduce-motion is off.
+  (function initMagneticHover() {
+    const prefersReducedMotion =
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const canHover =
+      window.matchMedia && window.matchMedia("(hover:hover)").matches;
+
+    if (prefersReducedMotion || !canHover) return;
+
+    const nodes = Array.from(document.querySelectorAll("[data-magnet]"));
+    if (!nodes.length) return;
+
+    const MAX = 7; // px
+
+    nodes.forEach(function (el) {
+      let rect = null;
+
+      function onEnter() {
+        rect = el.getBoundingClientRect();
+        el.classList.add("is-magnet-on");
+      }
+
+      function onMove(e) {
+        if (!rect) rect = el.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / Math.max(1, rect.width) - 0.5;
+        const y = (e.clientY - rect.top) / Math.max(1, rect.height) - 0.5;
+        el.style.setProperty("--mag-x", (x * MAX).toFixed(2) + "px");
+        el.style.setProperty("--mag-y", (y * MAX).toFixed(2) + "px");
+      }
+
+      function onLeave() {
+        rect = null;
+        el.style.setProperty("--mag-x", "0px");
+        el.style.setProperty("--mag-y", "0px");
+        el.classList.remove("is-magnet-on");
+      }
+
+      el.addEventListener("pointerenter", onEnter);
+      el.addEventListener("pointermove", onMove);
+      el.addEventListener("pointerleave", onLeave);
+    });
+  })();
+
+  // ===== Subpage sticky side navigation (scrollspy) =====
+  (function initSubpageSideNav() {
+    const sidenav = document.querySelector(".subpage-sidenav");
+    if (!sidenav) return;
+
+    const prefersReducedMotion =
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const links = Array.from(sidenav.querySelectorAll('a[href^="#"]'));
+    if (!links.length) return;
+
+    const sections = links
+      .map(function (a) {
+        const href = a.getAttribute("href");
+        try {
+          return href ? document.querySelector(href) : null;
+        } catch (e) {
+          return null;
+        }
+      })
+      .filter(Boolean);
+
+    if (!sections.length) return;
+
+    function setActive(id) {
+      links.forEach(function (a) {
+        const href = a.getAttribute("href") || "";
+        const isActive = href === "#" + id;
+        a.classList.toggle("is-active", isActive);
+        if (isActive) a.setAttribute("aria-current", "true");
+        else a.removeAttribute("aria-current");
+      });
+    }
+
+    function refresh() {
+      const triggerY = window.scrollY + window.innerHeight * 0.32;
+      let activeId = sections[0].id;
+
+      sections.forEach(function (sec) {
+        if (sec.offsetTop <= triggerY) activeId = sec.id;
+      });
+
+      setActive(activeId);
+    }
+
+    // Initial state + scroll handler (simple & stable)
+    window.addEventListener("scroll", refresh, { passive: true });
+    window.addEventListener("resize", refresh);
+    refresh();
+
+    // Improve perceived response on click
+    links.forEach(function (a) {
+      a.addEventListener("click", function () {
+        const href = a.getAttribute("href") || "";
+        if (href.startsWith("#")) {
+          const id = href.slice(1);
+          window.setTimeout(function () {
+            setActive(id);
+          }, prefersReducedMotion ? 0 : 90);
+        }
+      });
+    });
+  })();
+
+  // ===== Subpage hero parallax (micro depth) =====
+  (function initSubpageHeroParallax() {
+    const prefersReducedMotion =
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (prefersReducedMotion) return;
+
+    const imgs = Array.from(document.querySelectorAll("[data-parallax-img]"));
+    if (!imgs.length) return;
+
+    function clamp(n, a, b) {
+      return Math.max(a, Math.min(b, n));
+    }
+
+    let scheduled = false;
+
+    function update() {
+      scheduled = false;
+
+      imgs.forEach(function (img) {
+        const sec = img.closest("section") || img.parentElement;
+        if (!sec) return;
+
+        const rect = sec.getBoundingClientRect();
+        const vh = Math.max(1, window.innerHeight || 1);
+
+        // t: -1..1 around center
+        const center = rect.top + rect.height * 0.5;
+        const t = clamp((center - vh * 0.5) / vh, -1, 1);
+
+        const y = t * -10; // px
+        img.style.transform = "translate3d(0," + y.toFixed(2) + "px,0) scale(1.03)";
+      });
+    }
+
+    function onScroll() {
+      if (scheduled) return;
+      scheduled = true;
+      requestAnimationFrame(update);
+    }
+
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+  })();
+
+  // ===== Home: media cycling inside about cards (exposure swap) =====
+  (function initHomeMediaCycle() {
+    if (!isHomePage) return;
+
+    const prefersReducedMotion =
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (prefersReducedMotion) return;
+
+    const nodes = Array.from(document.querySelectorAll(".media-cycle[data-cycle-sources]"));
+    if (!nodes.length) return;
+
+    const CYCLE_MS = 4000;
+    const ROW_DELAY_MS = 160;
+    const DURATION_MS = 200;
+
+    nodes.forEach(function (wrap) {
+      const sources = String(wrap.dataset.cycleSources || "")
+        .split("|")
+        .map(function (s) { return s.trim(); })
+        .filter(Boolean);
+
+      if (sources.length < 2) return;
+
+      const dir = (wrap.dataset.cycleDir || "left").toLowerCase();
+      const shift = 14; // %
+      const outX = dir === "right" ? shift : -shift;
+      const inX = dir === "right" ? -shift : shift;
+
+      wrap.classList.add("media-cycle-ready");
+
+      let a = wrap.querySelector("img");
+      if (!a) {
+        a = document.createElement("img");
+        a.src = sources[0];
+        a.alt = "";
+        wrap.appendChild(a);
+      }
+      a.classList.add("media-cycle-img", "is-active");
+      a.style.opacity = "1";
+      a.style.transform = "translate3d(0,0,0)";
+
+      const b = document.createElement("img");
+      b.className = "media-cycle-img";
+      b.alt = "";
+      b.decoding = "async";
+      b.loading = "lazy";
+      b.style.opacity = "0";
+      b.style.transform = "translate3d(" + inX + "%,0,0)";
+      wrap.appendChild(b);
+
+      let idx = 0;
+      let active = a;
+      let next = b;
+
+      function swap() {
+        const nextIdx = (idx + 1) % sources.length;
+        next.src = sources[nextIdx];
+
+        // prepare
+        next.style.transition = "none";
+        active.style.transition = "none";
+        next.style.opacity = "0";
+        next.style.transform = "translate3d(" + inX + "%,0,0)";
+        active.style.opacity = "1";
+        active.style.transform = "translate3d(0,0,0)";
+
+        // play
+        requestAnimationFrame(function () {
+          next.style.transition = "transform " + DURATION_MS + "ms ease, opacity " + DURATION_MS + "ms ease";
+          active.style.transition = "transform " + DURATION_MS + "ms ease, opacity " + DURATION_MS + "ms ease";
+
+          next.style.opacity = "1";
+          next.style.transform = "translate3d(0,0,0)";
+          active.style.opacity = "0";
+          active.style.transform = "translate3d(" + outX + "%,0,0)";
+
+          window.setTimeout(function () {
+            idx = nextIdx;
+            // swap refs
+            const tmp = active;
+            active = next;
+            next = tmp;
+          }, DURATION_MS + 40);
+        });
+      }
+
+      // schedule: "rows" go one by one
+      const myDelay = nodes.indexOf(wrap) * ROW_DELAY_MS;
+      window.setTimeout(function () {
+        window.setInterval(swap, CYCLE_MS);
+      }, myDelay + CYCLE_MS);
+    });
+  })();
+
+  // ===== Home: contacts typewriter =====
+  (function initContactsTypewriter() {
+    if (!isHomePage) return;
+
+    const node = document.getElementById("contacts-typewriter");
+    if (!node) return;
+
+    const prefersReducedMotion =
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const phrases = String(node.dataset.phrases || "")
+      .split("|")
+      .map(function (s) { return s.trim(); })
+      .filter(Boolean);
+
+    if (!phrases.length) return;
+
+    if (prefersReducedMotion) {
+      node.textContent = phrases[0];
+      return;
+    }
+
+    const TYPE_MS = 26;   // typing speed
+    const ERASE_MS = 10;  // fast erase
+    const HOLD_MS = 1200; // hold at full text
+    const GAP_MS = 160;   // pause between erase and next type
+
+    let phraseIndex = 0;
+    let charIndex = 0;
+    let mode = "type"; // type | hold | erase
+    let timer = 0;
+
+    function tick() {
+      const phrase = phrases[phraseIndex] || phrases[0];
+
+      if (mode === "type") {
+        charIndex += 1;
+        node.textContent = phrase.slice(0, charIndex);
+
+        if (charIndex >= phrase.length) {
+          mode = "hold";
+          timer = window.setTimeout(tick, HOLD_MS);
+          return;
+        }
+
+        timer = window.setTimeout(tick, TYPE_MS);
+        return;
+      }
+
+      if (mode === "hold") {
+        mode = "erase";
+        timer = window.setTimeout(tick, ERASE_MS);
+        return;
+      }
+
+      // erase
+      charIndex -= 2; // erase faster by 2 chars per tick
+      if (charIndex <= 0) {
+        node.textContent = "";
+        charIndex = 0;
+        phraseIndex = (phraseIndex + 1) % phrases.length;
+        mode = "type";
+        timer = window.setTimeout(tick, GAP_MS);
+        return;
+      }
+
+      node.textContent = phrase.slice(0, charIndex);
+      timer = window.setTimeout(tick, ERASE_MS);
+    }
+
+    // start after a short delay (so it feels intentional)
+    window.setTimeout(tick, 520);
+
+    // cleanup in background tabs
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) {
+        window.clearTimeout(timer);
+      } else {
+        window.clearTimeout(timer);
+        mode = "type";
+        charIndex = 0;
+        node.textContent = "";
+        window.setTimeout(tick, 320);
+      }
+    });
+  })();
+
 
   installGoogleTranslateBannerFix();
 })();
